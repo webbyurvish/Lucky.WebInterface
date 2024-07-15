@@ -1,7 +1,8 @@
 import "./App.css";
+import Layout from "./components/layout/Layout";
 
 function App() {
-  return <>Lucky</>;
+  return <Layout>Lucky</Layout>;
 }
 
 export default App;
