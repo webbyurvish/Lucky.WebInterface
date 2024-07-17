@@ -9,10 +9,12 @@ interface LoginCredentials {
 }
 
 interface SignupData {
-  name: string;
+  username: string;
   email: string;
   password: string;
-  image?: File; // Optional if not always provided
+  dateOfBirth: string | undefined;
+  phoneNumber: string;
+  code: string;
 }
 
 interface ResponseData {
@@ -32,11 +34,17 @@ interface SignupThunkParams {
   //   navigate: (path: string) => void;
 }
 
+// Define the type for the reject value
+interface MyRejectValue {
+  message: string;
+  status?: number;
+}
+
 // Async thunk for user login
 export const loginUser = createAsyncThunk<
   ResponseData, // Return type of the payload creator
   LoginThunkParams, // Argument type of the payload creator
-  { rejectValue: any } // Optional object containing meta fields
+  { rejectValue: MyRejectValue } // Optional object containing meta fields
 >("loginuser", async ({ credentials }, { rejectWithValue }) => {
   try {
     const response = await axios.post<ResponseData>(
@@ -49,12 +57,12 @@ export const loginUser = createAsyncThunk<
       }
     );
     // navigate("/");
-    console.log(response.data);
 
     Cookies.set("tokens", response.data.accessToken, { expires: 7 });
     return response.data;
-  } catch (error: any) {
-    return rejectWithValue(error.response.data);
+  } catch (error) {
+    // TypeScript requires 'any' or 'unknown' for catch clause variable type annotation
+    return rejectWithValue({ message: (error as Error).message });
   }
 });
 
@@ -62,38 +70,31 @@ export const loginUser = createAsyncThunk<
 export const signupUser = createAsyncThunk<
   ResponseData, // Return type of the payload creator
   SignupThunkParams, // Argument type of the payload creator
-  { rejectValue: any } // Optional object containing meta fields
+  { rejectValue: MyRejectValue } // Optional object containing meta fields
 >("signupUser", async ({ userData }, { rejectWithValue }) => {
   try {
-    const formData = new FormData();
-    formData.append("name", userData.name);
-    formData.append("email", userData.email);
-    formData.append("password", userData.password);
-    if (userData.image) {
-      formData.append("imagefile", userData.image);
-    }
-
     const response = await axios.post<ResponseData>(
-      "https://localhost:5002/api/authentication/register",
-      formData,
+      "https://localhost:5002/api/authentication",
+      userData,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
     );
     // navigate("/");
     return response.data;
-  } catch (error: any) {
-    return rejectWithValue(error.response.data);
+  } catch (error) {
+    // TypeScript requires 'any' or 'unknown' for catch clause variable type annotation
+    return rejectWithValue({ message: (error as Error).message });
   }
 });
 
 export interface AuthState {
-  error: any;
+  error: string | null; // Change 'any' to 'string | null' assuming error is a string message or null
   loading: boolean;
-  user: any;
+  user: object | null; // Change 'any' to a specific type or 'null'
   isAuthenticated: boolean;
 }
 
@@ -106,8 +107,8 @@ const initialState: AuthState = {
 };
 
 // Retrieve token from localStorage
-const token =
-  typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+const token = Cookies.get("AccessToken");
+// typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
 
 // If token exists, decode it and store the data in the user
 if (token) {
@@ -127,7 +128,6 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       state.isAuthenticated = false;
-      //   localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -138,38 +138,40 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        // Set loading to false, clear error, set user data, store token in localStorage, and display success toast
         state.loading = false;
         state.error = null;
         state.isAuthenticated = true;
-        // state.user = jwtDecode(action.payload.AccessToken);
-        console.log(action.payload);
-
-        localStorage.setItem("tokenObject", action.payload.accessToken);
+        Cookies.set("AccessToken", action.payload.accessToken, { expires: 7 });
+        Cookies.set("RefreshToken", action.payload.refreshToken, {
+          expires: 7,
+        });
+        const token = Cookies.get("AccessToken");
+        if (token) {
+          state.user = jwtDecode(token);
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
-        // Set loading to false, set error message, set isAuthenticated to false, and display error toast
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload ? action.payload.message : "Unknown Error"; // Handle payload properly
         state.isAuthenticated = false;
       })
       .addCase(signupUser.pending, (state) => {
-        // Set loading to true and clear any previous errors
         state.loading = true;
         state.error = null;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        // Set loading to false, clear error, set user data, store token in localStorage, and display success toast
         state.loading = false;
         state.error = null;
         state.isAuthenticated = true;
-        state.user = jwtDecode(action.payload.AccessToken);
-        localStorage.setItem("token", action.payload.AccessToken);
+        state.user = jwtDecode(action.payload.accessToken);
+        Cookies.set("AccessToken", action.payload.accessToken, { expires: 7 });
+        Cookies.set("RefreshToken", action.payload.refreshToken, {
+          expires: 7,
+        });
       })
       .addCase(signupUser.rejected, (state, action) => {
-        // Set loading to false, set error message, set isAuthenticated to false, and display error toast
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload ? action.payload.message : "Unknown Error"; // Handle payload properly
         state.isAuthenticated = false;
       });
   },
