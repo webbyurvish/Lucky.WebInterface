@@ -3,6 +3,7 @@ import { RootState } from "../../../redux/RootState";
 import SignInModal from "../../auth/SignInModal";
 import RegisterModal from "../../auth/RegisterModal";
 import { useSelector } from "react-redux";
+import HeaderProfile from "../header/HeaderProfile";
 
 const Header = () => {
   const { user, isAuthenticated } = useSelector(
@@ -30,11 +31,7 @@ const Header = () => {
           </div>
           <div className="right-menu-reature">
             {isAuthenticated ? (
-              <img
-                src="./src/assets/img/man.png"
-                style={{ maxWidth: "30px" }}
-                alt="man"
-              />
+              <HeaderProfile />
             ) : (
               <div className="signup-area">
                 <a
@@ -59,10 +56,8 @@ const Header = () => {
         </div>
       </header>
       {/* <!--==== Header top End  ====== --> */}
-      {/* <!-- Popup Section Start --> */}
       <SignInModal />
       <RegisterModal />
-      {/* <!-- Popup Section End --> */}
     </div>
   );
 };

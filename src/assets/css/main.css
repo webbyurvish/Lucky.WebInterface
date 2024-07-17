@@ -2701,7 +2701,7 @@ p {
 .register-from form .items .cmn--btn {
   padding: 12px 5px 15px 5px;
   text-align: center;
-  width: 228px;
+  width: 100%;
   font-weight: 600;
   font-size: 16px;
   line-height: 19.2px;
@@ -6371,3 +6371,8 @@ p {
     padding-bottom: 68px;
   }
 } /*# sourceMappingURL=main.css.map */
+
+.required label:after {
+  content: "*";
+  color: red;
+}

@@ -128,6 +128,8 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       state.isAuthenticated = false;
+      Cookies.remove("AccessToken");
+      Cookies.remove("RefreshToken");
     },
   },
   extraReducers: (builder) => {

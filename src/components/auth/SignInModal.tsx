@@ -7,6 +7,7 @@ import { useState } from "react";
 const SignInModal = () => {
   const [username, setUserName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -24,6 +25,7 @@ const SignInModal = () => {
       console.error("Login failed: ", error);
     }
   };
+
   return (
     <div
       className="modal mylogin signup-popup fade"
@@ -34,9 +36,9 @@ const SignInModal = () => {
         <div className="modal-content">
           <div className="modal-header">
             <div className="head">
-              <h5>Sign into your account</h5>
+              <h5>Sign In</h5>
               <p>
-                Don't have an account?{" "}
+                Don't have an account?
                 <a href="#0" className="text-base">
                   Sign up
                 </a>
@@ -53,7 +55,7 @@ const SignInModal = () => {
             <div className="register-from">
               <form onSubmit={handleSignIn}>
                 <div className="items">
-                  <div className="form-input">
+                  <div className="form-input required">
                     <label htmlFor="email3" className="form-label">
                       Email
                     </label>
@@ -67,14 +69,14 @@ const SignInModal = () => {
                   </div>
                 </div>
                 <div className="items">
-                  <div className="form-input">
+                  <div className="form-input required">
                     <label htmlFor="password-field" className="form-label">
                       Password
                     </label>
                     <div className="form-group">
                       <input
                         id="password-field"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         className="form-control"
                         placeholder="Your Password"
                         name="password"
@@ -83,7 +85,13 @@ const SignInModal = () => {
                       />
                       <span
                         id="#password-field"
-                        className="fa fa-fw fa-eye field-icon toggle-password"
+                        className={`fa fa-fw ${
+                          showPassword ? "fa-eye-slash" : "fa-eye"
+                        } field-icon toggle`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          setShowPassword((prevState) => !prevState)
+                        }
                       ></span>
                     </div>
                   </div>
@@ -114,7 +122,7 @@ const SignInModal = () => {
                     type="submit"
                     className="cmn--btn cd-popup-close repopup"
                   >
-                    <span>Start Playing</span>
+                    <span>Sign In</span>
                   </button>
                 </div>
                 <div className="orbar">
